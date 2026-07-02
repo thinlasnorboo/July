@@ -1,22 +1,37 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: LA RC Cafe API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: bookings
+    description: Reservation management
+  - name: services
+    description: Services offered
+  - name: menu
+    description: Cafe menu
+  - name: gallery
+    description: Gallery items
+  - name: contact
+    description: Contact messages
+  - name: stats
+    description: Venue statistics
+  - name: products
+    description: Shop products
+  - name: admin
+    description: Admin operations
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +39,536 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List all bookings
+      responses:
+        "200":
+          description: List of bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Create a new booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingInput"
+      responses:
+        "201":
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "400":
+          description: Bad request
+
+  /bookings/{id}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get a booking by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Booking found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateBooking
+      tags: [bookings]
+      summary: Update booking status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+    delete:
+      operationId: deleteBooking
+      tags: [bookings]
+      summary: Cancel/delete a booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /services:
+    get:
+      operationId: listServices
+      tags: [services]
+      summary: List all services
+      responses:
+        "200":
+          description: List of services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+
+  /menu:
+    get:
+      operationId: listMenuItems
+      tags: [menu]
+      summary: List all menu items
+      responses:
+        "200":
+          description: List of menu items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MenuItem"
+    post:
+      operationId: createMenuItem
+      tags: [menu]
+      summary: Create a menu item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MenuItemInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MenuItem"
+
+  /menu/{id}:
+    patch:
+      operationId: updateMenuItem
+      tags: [menu]
+      summary: Update a menu item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MenuItemUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MenuItem"
+    delete:
+      operationId: deleteMenuItem
+      tags: [menu]
+      summary: Delete a menu item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /gallery:
+    get:
+      operationId: listGalleryItems
+      tags: [gallery]
+      summary: List all gallery items
+      responses:
+        "200":
+          description: Gallery items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GalleryItem"
+
+  /contact:
+    post:
+      operationId: submitContact
+      tags: [contact]
+      summary: Submit a contact message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactInput"
+      responses:
+        "201":
+          description: Message submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactMessage"
+    get:
+      operationId: listContactMessages
+      tags: [contact]
+      summary: List all contact messages
+      responses:
+        "200":
+          description: Contact messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ContactMessage"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [stats]
+      summary: Get venue statistics
+      responses:
+        "200":
+          description: Venue stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VenueStats"
+
+  /products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List all shop products
+      responses:
+        "200":
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Create a product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /products/{id}:
+    patch:
+      operationId: updateProduct
+      tags: [products]
+      summary: Update a product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      summary: Delete a product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [admin]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLoginResult"
+        "401":
+          description: Unauthorized
+
+  /admin/verify:
+    get:
+      operationId: verifyAdmin
+      tags: [admin]
+      summary: Verify admin token
+      responses:
+        "200":
+          description: Token valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                required: [valid]
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    Booking:
+      type: object
+      required: [id, firstName, lastName, email, date, time, experienceType, status, createdAt]
+      properties:
+        id:               { type: integer }
+        firstName:        { type: string }
+        lastName:         { type: string }
+        email:            { type: string }
+        phone:            { type: ["string", "null"] }
+        date:             { type: string }
+        time:             { type: string }
+        experienceType:   { type: string }
+        specialRequests:  { type: ["string", "null"] }
+        status:           { type: string }
+        createdAt:        { type: string }
+
+    BookingInput:
+      type: object
+      required: [firstName, lastName, email, date, time, experienceType]
+      properties:
+        firstName:       { type: string, minLength: 1 }
+        lastName:        { type: string, minLength: 1 }
+        email:           { type: string, minLength: 1 }
+        phone:           { type: string }
+        date:            { type: string, minLength: 1 }
+        time:            { type: string, minLength: 1 }
+        experienceType:  { type: string, minLength: 1 }
+        specialRequests: { type: string }
+
+    BookingUpdate:
+      type: object
+      properties:
+        status:          { type: string }
+        firstName:       { type: string }
+        lastName:        { type: string }
+        email:           { type: string }
+        phone:           { type: string }
+        date:            { type: string }
+        time:            { type: string }
+        experienceType:  { type: string }
+        specialRequests: { type: string }
+
+    Service:
+      type: object
+      required: [id, name, description, priceFrom, priceUnit, category, featured]
+      properties:
+        id:          { type: integer }
+        name:        { type: string }
+        description: { type: string }
+        priceFrom:   { type: integer }
+        priceUnit:   { type: string }
+        category:    { type: string }
+        featured:    { type: boolean }
+
+    MenuItem:
+      type: object
+      required: [id, name, description, price, category, featured, sortOrder]
+      properties:
+        id:          { type: integer }
+        name:        { type: string }
+        description: { type: string }
+        price:       { type: integer }
+        category:    { type: string, enum: [coffee, cold_drinks, snacks, pizza, rc_track, rc_rental, combo] }
+        featured:    { type: boolean }
+        sortOrder:   { type: integer }
+
+    MenuItemInput:
+      type: object
+      required: [name, description, price, category]
+      properties:
+        name:        { type: string, minLength: 1 }
+        description: { type: string }
+        price:       { type: integer }
+        category:    { type: string, enum: [coffee, cold_drinks, snacks, pizza, rc_track, rc_rental, combo] }
+        featured:    { type: boolean }
+        sortOrder:   { type: integer }
+
+    MenuItemUpdate:
+      type: object
+      properties:
+        name:        { type: string }
+        description: { type: string }
+        price:       { type: integer }
+        category:    { type: string, enum: [coffee, cold_drinks, snacks, pizza, rc_track, rc_rental, combo] }
+        featured:    { type: boolean }
+        sortOrder:   { type: integer }
+
+    GalleryItem:
+      type: object
+      required: [id, title, category]
+      properties:
+        id:       { type: integer }
+        title:    { type: string }
+        category: { type: string }
+        imageUrl: { type: ["string", "null"] }
+
+    ContactInput:
+      type: object
+      required: [name, email, message]
+      properties:
+        name:    { type: string, minLength: 1 }
+        email:   { type: string, minLength: 1 }
+        subject: { type: string }
+        message: { type: string, minLength: 1 }
+
+    ContactMessage:
+      type: object
+      required: [id, name, email, message, createdAt]
+      properties:
+        id:        { type: integer }
+        name:      { type: string }
+        email:     { type: string }
+        subject:   { type: ["string", "null"] }
+        message:   { type: string }
+        createdAt: { type: string }
+
+    VenueStats:
+      type: object
+      required: [totalBookings, confirmedBookings, pendingBookings, totalTracks, memberCount, totalProducts, yearsOpen]
+      properties:
+        totalBookings:     { type: integer }
+        confirmedBookings: { type: integer }
+        pendingBookings:   { type: integer }
+        totalTracks:       { type: integer }
+        memberCount:       { type: integer }
+        totalProducts:     { type: integer }
+        yearsOpen:         { type: integer }
+
+    Product:
+      type: object
+      required: [id, name, description, price, category, featured, inStock, stock]
+      properties:
+        id:          { type: integer }
+        name:        { type: string }
+        description: { type: string }
+        price:       { type: integer }
+        category:    { type: string }
+        featured:    { type: boolean }
+        inStock:     { type: boolean }
+        stock:       { type: integer }
+        imageUrl:    { type: ["string", "null"] }
+
+    ProductInput:
+      type: object
+      required: [name, description, price, category]
+      properties:
+        name:        { type: string, minLength: 1 }
+        description: { type: string }
+        price:       { type: integer }
+        category:    { type: string, minLength: 1 }
+        featured:    { type: boolean }
+        inStock:     { type: boolean }
+        stock:       { type: integer }
+        imageUrl:    { type: string }
+
+    ProductUpdate:
+      type: object
+      properties:
+        name:        { type: string }
+        description: { type: string }
+        price:       { type: integer }
+        category:    { type: string }
+        featured:    { type: boolean }
+        inStock:     { type: boolean }
+        stock:       { type: integer }
+        imageUrl:    { type: string }
+
+    AdminLoginInput:
+      type: object
+      required: [userId, password]
+      properties:
+        userId:   { type: string }
+        password: { type: string }
+
+    AdminLoginResult:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }

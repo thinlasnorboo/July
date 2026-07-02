@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "LA RC Cafe"
+version = "1.0.0"
+id = "artifacts/rc-cafe"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23330
+
+[services.development]
+run = "pnpm --filter @workspace/rc-cafe run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/rc-cafe", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/rc-cafe/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23330"
+BASE_PATH = "/"

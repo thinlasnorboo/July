@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useGetStats,
   useListBookings, useUpdateBooking, useDeleteBooking,
@@ -18,7 +18,8 @@ import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import {
   LogOut, Activity, Calendar, Package, Utensils, MessageSquare,
-  Trash2, Edit2, Plus, X, Images, CheckCircle2, XCircle, Link2,
+  Trash2, Edit2, Plus, X, Images, CheckCircle2, XCircle, Link2, Building2, Copy,
+  Upload, ImageIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -127,6 +128,67 @@ function BookingForm({ initial, onSave, onCancel }: {
   );
 }
 
+// ─── Admin Image Upload ────────────────────────────────────────────────────────
+function AdminImageUpload({ currentUrl, onUploaded }: { currentUrl: string; onUploaded: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError("");
+    setUploading(true);
+    try {
+      const token = localStorage.getItem("rc_admin_token") ?? "";
+      // Step 1: get presigned URL
+      const res = await fetch("/api/storage/uploads/request-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type || "image/jpeg" }),
+      });
+      if (!res.ok) throw new Error("Failed to get upload URL");
+      const { uploadURL, objectPath } = await res.json();
+      // Step 2: upload directly to GCS
+      const put = await fetch(uploadURL, { method: "PUT", body: file, headers: { "Content-Type": file.type || "image/jpeg" } });
+      if (!put.ok) throw new Error("Upload to storage failed");
+      // Step 3: return serving URL
+      onUploaded(`/api/storage${objectPath}`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      {/* Preview */}
+      {currentUrl && (
+        <div className="relative w-full h-32 bg-muted/10 border border-border/30 overflow-hidden">
+          <img src={currentUrl} alt="preview" className="w-full h-full object-cover" onError={e => (e.currentTarget.style.display = "none")} />
+        </div>
+      )}
+      {/* Upload button */}
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full rounded-none uppercase tracking-widest text-xs border-dashed border-primary/40 hover:border-primary"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+      >
+        {uploading
+          ? <><Upload className="w-3 h-3 mr-2 animate-bounce" /> Uploading...</>
+          : <><ImageIcon className="w-3 h-3 mr-2" /> {currentUrl ? "Change Image" : "Upload Image"}</>
+        }
+      </Button>
+      {error && <p className="text-xs text-destructive">{error}</p>}
+    </div>
+  );
+}
+
 // ─── Reusable dialog-like overlay ─────────────────────────────────────────────
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
@@ -210,17 +272,20 @@ function ProductForm({ initial, onSave, onCancel }: {
       </div>
       <div>
         <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block flex items-center gap-1">
-          <Link2 className="w-3 h-3" /> Image URL
+          <ImageIcon className="w-3 h-3" /> Product Image
         </Label>
+        <AdminImageUpload currentUrl={form.imageUrl} onUploaded={url => set("imageUrl", url)} />
+        <div className="flex items-center gap-2 mt-2">
+          <div className="flex-1 h-px bg-border/30" />
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground">or paste URL</span>
+          <div className="flex-1 h-px bg-border/30" />
+        </div>
         <Input
-          className="rounded-none"
+          className="rounded-none mt-2"
           value={form.imageUrl}
           onChange={e => set("imageUrl", e.target.value)}
           placeholder="https://... (paste image link)"
         />
-        {form.imageUrl && (
-          <img src={form.imageUrl} alt="preview" className="mt-2 h-24 w-full object-cover border border-border/30" onError={e => (e.currentTarget.style.display = "none")} />
-        )}
       </div>
       <div className="flex gap-6 pt-1">
         <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -265,12 +330,15 @@ function SlideForm({ initial, onSave, onCancel }: {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block flex items-center gap-1">
-          <Link2 className="w-3 h-3" /> Image URL *
+          <ImageIcon className="w-3 h-3" /> Slide Image *
         </Label>
-        <Input className="rounded-none" value={form.imageUrl} onChange={e => set("imageUrl", e.target.value)} required placeholder="https://... image link" />
-        {form.imageUrl && (
-          <img src={form.imageUrl} alt="preview" className="mt-2 h-32 w-full object-cover border border-border/30" onError={e => (e.currentTarget.style.display = "none")} />
-        )}
+        <AdminImageUpload currentUrl={form.imageUrl} onUploaded={url => set("imageUrl", url)} />
+        <div className="flex items-center gap-2 mt-2">
+          <div className="flex-1 h-px bg-border/30" />
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground">or paste URL</span>
+          <div className="flex-1 h-px bg-border/30" />
+        </div>
+        <Input className="rounded-none mt-2" value={form.imageUrl} onChange={e => set("imageUrl", e.target.value)} placeholder="https://... image link" />
       </div>
       <div>
         <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">Heading Text</Label>
@@ -336,6 +404,19 @@ export default function Admin() {
 
   // Booking modal state
   const [bookingModal, setBookingModal] = useState<{ mode: "add" | "edit"; booking?: Booking } | null>(null);
+
+  // Bank details state
+  const [bankDetails, setBankDetails] = useState({ accountNo: "", holderName: "", ifscCode: "", bankName: "ICICI Bank", upiId: "" });
+  const [bankSaving, setBankSaving] = useState(false);
+  const fetchBankDetails = () => fetch("/api/bank-details").then(r => r.json()).then(d => setBankDetails({ accountNo: d.accountNo ?? "", holderName: d.holderName ?? "", ifscCode: d.ifscCode ?? "", bankName: d.bankName ?? "ICICI Bank", upiId: d.upiId ?? "" })).catch(() => {});
+  useEffect(() => { if (activeTab === "settings") fetchBankDetails(); }, [activeTab]);
+  const handleSaveBank = async () => {
+    setBankSaving(true);
+    try {
+      const res = await fetch("/api/bank-details", { method: "PATCH", headers: authHeader, body: JSON.stringify(bankDetails) });
+      if (res.ok) toast({ title: "Bank Details Saved" });
+    } finally { setBankSaving(false); }
+  };
   // Product modal state
   const [productModal, setProductModal] = useState<{ mode: "add" | "edit"; product?: Product } | null>(null);
   // Menu modal state
@@ -496,6 +577,7 @@ export default function Admin() {
               { value: "menu", icon: <Utensils className="w-4 h-4 mr-2" />, label: "Menu" },
               { value: "slides", icon: <Images className="w-4 h-4 mr-2" />, label: "Slider" },
               { value: "messages", icon: <MessageSquare className="w-4 h-4 mr-2" />, label: "Messages" },
+              { value: "settings", icon: <Building2 className="w-4 h-4 mr-2" />, label: "Settings" },
             ].map(t => (
               <TabsTrigger key={t.value} value={t.value} className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-5 py-3 uppercase tracking-widest text-xs font-bold whitespace-nowrap flex items-center">
                 {t.icon}{t.label}
@@ -698,6 +780,41 @@ export default function Admin() {
                 </Card>
               ))}
               {messages.length === 0 && <div className="col-span-full py-12 text-center text-muted-foreground border border-dashed border-border/50">No messages yet.</div>}
+            </div>
+          </TabsContent>
+
+          {/* ── Settings ── */}
+          <TabsContent value="settings" className="animate-in fade-in max-w-xl">
+            <h2 className="font-bold uppercase tracking-widest text-sm mb-6 flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-primary" /> Bank Transfer Details
+            </h2>
+            <div className="bg-card border border-border/50 p-6 space-y-4">
+              <p className="text-xs text-muted-foreground">Yeh details checkout page pe show hongi jab customer "Bank Transfer" choose kare.</p>
+              <div>
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">Account Holder Name *</Label>
+                <Input className="rounded-none" value={bankDetails.holderName} onChange={e => setBankDetails(d => ({ ...d, holderName: e.target.value }))} placeholder="THINLAS NORBOO" />
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">Account Number *</Label>
+                <Input className="rounded-none font-mono" value={bankDetails.accountNo} onChange={e => setBankDetails(d => ({ ...d, accountNo: e.target.value }))} placeholder="216001502780" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">IFSC Code *</Label>
+                  <Input className="rounded-none font-mono uppercase" value={bankDetails.ifscCode} onChange={e => setBankDetails(d => ({ ...d, ifscCode: e.target.value.toUpperCase() }))} placeholder="ICIC0003623" />
+                </div>
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">Bank Name</Label>
+                  <Input className="rounded-none" value={bankDetails.bankName} onChange={e => setBankDetails(d => ({ ...d, bankName: e.target.value }))} placeholder="ICICI Bank" />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">UPI ID (optional)</Label>
+                <Input className="rounded-none" value={bankDetails.upiId} onChange={e => setBankDetails(d => ({ ...d, upiId: e.target.value }))} placeholder="yourname@upi" />
+              </div>
+              <Button onClick={handleSaveBank} disabled={bankSaving} className="rounded-none uppercase tracking-widest text-xs font-bold bg-primary hover:bg-primary/90 w-full mt-2">
+                {bankSaving ? "Saving..." : "Save Bank Details"}
+              </Button>
             </div>
           </TabsContent>
 

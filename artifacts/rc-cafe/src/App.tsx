@@ -11,8 +11,11 @@ import Menu from "./pages/Menu";
 import Gallery from "./pages/Gallery";
 import Book from "./pages/Book";
 import Contact from "./pages/Contact";
+import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
+import { CartProvider } from "@/context/CartContext";
 
 const queryClient = new QueryClient();
 if (typeof document !== "undefined") document.documentElement.classList.add("dark");
@@ -28,6 +31,8 @@ function MainRoutes() {
         <Route path="/gallery" component={Gallery} />
         <Route path="/book" component={Book} />
         <Route path="/contact" component={Contact} />
+        <Route path="/cart" component={Cart} />
+        <Route path="/checkout" component={Checkout} />
         <Route component={NotFound} />
       </Switch>
     </AppLayout>
@@ -47,12 +52,14 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
+      <CartProvider>
+        <TooltipProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Router />
+          </WouterRouter>
+          <Toaster />
+        </TooltipProvider>
+      </CartProvider>
     </QueryClientProvider>
   );
 }

@@ -77,8 +77,13 @@ export default function Book() {
         onSuccess: () => {
           toast({
             title: "Booking Confirmed",
-            description: "Your track time has been reserved. See you at the grid!",
+            description: "Redirecting you to WhatsApp to confirm your slot!",
           });
+          const d = form.getValues();
+          const msg = encodeURIComponent(
+            `Hi LA RC Cafe! I just booked a track slot.\n\nName: ${d.firstName} ${d.lastName}\nDate: ${format(d.date, "dd MMM yyyy")}\nTime: ${d.time}\nExperience: ${d.experienceType}\n\nPlease confirm my booking. Thank you!`
+          );
+          window.open(`https://wa.me/918082010443?text=${msg}`, "_blank");
           form.reset();
         },
         onError: () => {

@@ -82,7 +82,7 @@ export default function Contact() {
                   <h4 className="font-bold mb-1">Address</h4>
                   <p className="text-muted-foreground">LA RC Cafe</p>
                   <p className="text-muted-foreground">India</p>
-                  <a href="https://maps.app.goo.gl/Ax5oZPLmYdmaUmk56" target="_blank" rel="noreferrer" className="text-primary text-sm hover:underline mt-2 inline-block font-medium">Get Directions &rarr;</a>
+                  <a href="https://maps.app.goo.gl/3S5WxWXwAi9S7ThK6" target="_blank" rel="noreferrer" className="text-primary text-sm hover:underline mt-2 inline-block font-medium">Get Directions &rarr;</a>
                 </div>
               </div>
 

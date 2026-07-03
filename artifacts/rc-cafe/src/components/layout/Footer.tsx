@@ -23,7 +23,7 @@ export function Footer() {
               <a href="https://facebook.com" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                 <Facebook className="h-5 w-5" />
               </a>
-              <a href="https://wa.me/919622340933" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+              <a href="https://wa.me/918082010443" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                 <SiWhatsapp className="h-5 w-5" />
               </a>
             </div>
@@ -45,7 +45,7 @@ export function Footer() {
             <ul className="flex flex-col gap-3 text-sm text-muted-foreground">
               <li className="flex gap-3">
                 <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                <a href="https://maps.app.goo.gl/Ax5oZPLmYdmaUmk56" target="_blank" rel="noreferrer" className="hover:text-primary">
+                <a href="https://maps.app.goo.gl/3S5WxWXwAi9S7ThK6" target="_blank" rel="noreferrer" className="hover:text-primary">
                   LA RC Cafe, India
                 </a>
               </li>
@@ -55,7 +55,7 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-3">
                 <SiWhatsapp className="h-4 w-4 text-primary shrink-0" />
-                <a href="https://wa.me/919622340933" target="_blank" rel="noreferrer" className="hover:text-primary">WhatsApp Us</a>
+                <a href="https://wa.me/918082010443" target="_blank" rel="noreferrer" className="hover:text-primary">WhatsApp Us</a>
               </li>
             </ul>
           </div>

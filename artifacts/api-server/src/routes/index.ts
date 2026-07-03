@@ -8,26 +8,19 @@ import contactRouter from "./contact";
 import statsRouter from "./stats";
 import adminAuthRouter from "./adminAuth";
 import productsRouter from "./products";
-import { requireAdmin } from "../middlewares/adminAuth";
+import slidesRouter from "./slides";
 
 const router: IRouter = Router();
 
-// Public routes
 router.use(healthRouter);
 router.use(adminAuthRouter);
 router.use(servicesRouter);
 router.use(galleryRouter);
-
-// Public reads, protected writes handled inside each router
 router.use(menuRouter);
 router.use(productsRouter);
 router.use(contactRouter);
 router.use(bookingsRouter);
 router.use(statsRouter);
-
-// Protected admin-only listing routes (extra guard)
-router.get("/admin/bookings", requireAdmin, async (_req, res) => {
-  res.redirect("/api/bookings");
-});
+router.use(slidesRouter);
 
 export default router;

@@ -29,6 +29,103 @@ type Product = {
   imageUrl: string | null;
 };
 type Slide = { id: number; imageUrl: string; title: string; subtitle: string; sortOrder: number; active: boolean };
+type Booking = {
+  id: number; firstName: string; lastName: string; email: string; phone: string | null;
+  date: string; time: string; experienceType: string; specialRequests: string | null; status: string;
+};
+
+// ─── Booking Form ─────────────────────────────────────────────────────────────
+const EXPERIENCE_TYPES = ["30 Min Track", "1 Hour Track", "Full Day", "Drift Session", "RC Rental - Basic", "RC Rental - 4x4", "RC Rental - Crawler", "RC Rental - Competition", "Private Event", "Coaching"];
+const BOOKING_STATUSES = ["pending", "confirmed", "cancelled"];
+const TIME_SLOTS = ["09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00","19:30","20:00","20:30","21:00","21:30","22:00"];
+
+function BookingForm({ initial, onSave, onCancel }: {
+  initial?: Partial<Booking>;
+  onSave: (data: Omit<Booking, "id">) => void;
+  onCancel: () => void;
+}) {
+  const [form, setForm] = useState({
+    firstName: initial?.firstName ?? "",
+    lastName: initial?.lastName ?? "",
+    email: initial?.email ?? "",
+    phone: initial?.phone ?? "",
+    date: initial?.date ?? "",
+    time: initial?.time ?? "",
+    experienceType: initial?.experienceType ?? EXPERIENCE_TYPES[0],
+    specialRequests: initial?.specialRequests ?? "",
+    status: initial?.status ?? "pending",
+  });
+  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.firstName || !form.email || !form.date || !form.time) return;
+    onSave({
+      firstName: form.firstName, lastName: form.lastName, email: form.email,
+      phone: form.phone || null, date: form.date, time: form.time,
+      experienceType: form.experienceType, specialRequests: form.specialRequests || null,
+      status: form.status,
+    });
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">First Name *</Label>
+          <Input className="rounded-none" value={form.firstName} onChange={e => set("firstName", e.target.value)} required />
+        </div>
+        <div>
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">Last Name</Label>
+          <Input className="rounded-none" value={form.lastName} onChange={e => set("lastName", e.target.value)} />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">Email *</Label>
+          <Input className="rounded-none" type="email" value={form.email} onChange={e => set("email", e.target.value)} required />
+        </div>
+        <div>
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">Phone</Label>
+          <Input className="rounded-none" value={form.phone} onChange={e => set("phone", e.target.value)} />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">Date *</Label>
+          <Input className="rounded-none" type="date" value={form.date} onChange={e => set("date", e.target.value)} required />
+        </div>
+        <div>
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">Time *</Label>
+          <select className="w-full rounded-none border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" value={form.time} onChange={e => set("time", e.target.value)}>
+            <option value="">Select time</option>
+            {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+      </div>
+      <div>
+        <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">Experience Type</Label>
+        <select className="w-full rounded-none border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" value={form.experienceType} onChange={e => set("experienceType", e.target.value)}>
+          {EXPERIENCE_TYPES.map(t => <option key={t}>{t}</option>)}
+        </select>
+      </div>
+      <div>
+        <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">Status</Label>
+        <select className="w-full rounded-none border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" value={form.status} onChange={e => set("status", e.target.value)}>
+          {BOOKING_STATUSES.map(s => <option key={s}>{s}</option>)}
+        </select>
+      </div>
+      <div>
+        <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">Special Requests</Label>
+        <Input className="rounded-none" value={form.specialRequests} onChange={e => set("specialRequests", e.target.value)} placeholder="Any special requests..." />
+      </div>
+      <div className="flex gap-3 pt-2">
+        <Button type="submit" className="rounded-none uppercase tracking-widest text-xs font-bold flex-1 bg-primary hover:bg-primary/90">Save Booking</Button>
+        <Button type="button" variant="outline" className="rounded-none uppercase tracking-widest text-xs" onClick={onCancel}>Cancel</Button>
+      </div>
+    </form>
+  );
+}
 
 // ─── Reusable dialog-like overlay ─────────────────────────────────────────────
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
@@ -237,6 +334,8 @@ export default function Admin() {
   const fetchSlides = () => { setSlidesLoading(true); fetch("/api/slides").then(r => r.json()).then(setSlides).finally(() => setSlidesLoading(false)); };
   useEffect(() => { if (activeTab === "slides") fetchSlides(); }, [activeTab]);
 
+  // Booking modal state
+  const [bookingModal, setBookingModal] = useState<{ mode: "add" | "edit"; booking?: Booking } | null>(null);
   // Product modal state
   const [productModal, setProductModal] = useState<{ mode: "add" | "edit"; product?: Product } | null>(null);
   // Menu modal state
@@ -245,9 +344,11 @@ export default function Admin() {
   const [slideModal, setSlideModal] = useState<{ mode: "add" | "edit"; slide?: Slide } | null>(null);
 
   // ── Booking handlers ──
-  const handleUpdateBookingStatus = (id: number, status: string) => {
-    updateBooking.mutate({ id, data: { status } }, {
-      onSuccess: () => { toast({ title: "Status Updated" }); queryClient.invalidateQueries({ queryKey: getListBookingsQueryKey() }); }
+  const handleSaveBooking = (data: Omit<Booking, "id">) => {
+    if (!bookingModal?.booking) return;
+    const payload = { ...data, phone: data.phone ?? undefined, specialRequests: data.specialRequests ?? undefined };
+    updateBooking.mutate({ id: bookingModal.booking.id, data: payload }, {
+      onSuccess: () => { toast({ title: "Booking Updated" }); queryClient.invalidateQueries({ queryKey: getListBookingsQueryKey() }); setBookingModal(null); }
     });
   };
   const handleDeleteBooking = (id: number) => {
@@ -361,6 +462,11 @@ export default function Admin() {
           </div>
         </Modal>
       )}
+      {bookingModal && (
+        <Modal title="Edit Booking" onClose={() => setBookingModal(null)}>
+          <BookingForm initial={bookingModal.booking} onSave={handleSaveBooking} onCancel={() => setBookingModal(null)} />
+        </Modal>
+      )}
       {slideModal && (
         <Modal title={slideModal.mode === "add" ? "Add Hero Slide" : "Edit Slide"} onClose={() => setSlideModal(null)}>
           <SlideForm initial={slideModal.slide} onSave={handleSaveSlide} onCancel={() => setSlideModal(null)} />
@@ -438,9 +544,9 @@ export default function Admin() {
                           <Badge className="rounded-none uppercase tracking-widest text-[10px]" variant={b.status === "confirmed" ? "default" : b.status === "cancelled" ? "destructive" : "secondary"}>{b.status}</Badge>
                         </td>
                         <td className="px-6 py-4 text-right space-x-2">
-                          {b.status === "pending" && (
-                            <Button size="sm" variant="outline" className="h-8 rounded-none text-xs uppercase" onClick={() => handleUpdateBookingStatus(b.id, "confirmed")}>Confirm</Button>
-                          )}
+                          <Button size="sm" variant="outline" className="h-8 rounded-none text-xs uppercase" onClick={() => setBookingModal({ mode: "edit", booking: b as Booking })}>
+                            <Edit2 className="w-3 h-3 mr-1" /> Edit
+                          </Button>
                           <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-none text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteBooking(b.id)}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
